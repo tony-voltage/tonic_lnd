@@ -16,7 +16,8 @@ doctest = false
 
 [features]
 lightningrpc = []
-walletrpc = []
+signrpc = []
+walletrpc = ["signrpc"]
 all = ["lightningrpc", "walletrpc"]
 
 [dependencies]
