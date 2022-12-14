@@ -18,7 +18,8 @@ doctest = false
 lightningrpc = []
 signrpc = []
 walletrpc = ["signrpc"]
-all = ["lightningrpc", "walletrpc"]
+routerrpc = ["lightningrpc"]
+all = ["lightningrpc", "walletrpc", "routerrpc"]
 
 [dependencies]
 tonic = "0.7"
