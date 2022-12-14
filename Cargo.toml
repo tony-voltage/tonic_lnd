@@ -14,6 +14,10 @@ license = "MITNFA"
 [lib]
 doctest = false
 
+[features]
+lightningrpc = []
+all = ["lightningrpc"]
+
 [dependencies]
 tonic = "0.7"
 tonic-openssl = { version = "0.2" }

@@ -78,6 +78,7 @@ use openssl::{
 use std::path::{Path, PathBuf};
 use std::{error::Error, task::Poll};
 use tonic::body::BoxBody;
+#[allow(unused_imports)]
 use tonic::codegen::InterceptedService;
 use tonic_openssl::ALPN_H2_WIRE;
 use tower::Service;
@@ -86,6 +87,7 @@ use tower::Service;
 use tracing;
 
 /// Convenience type alias for lightning client.
+#[cfg(feature = "lightningrpc")]
 pub type LightningClient =
     lnrpc::lightning_client::LightningClient<InterceptedService<SslChannel, MacaroonInterceptor>>;
 
@@ -98,12 +100,14 @@ pub type WalletKitClient = walletrpc::wallet_kit_client::WalletKitClient<
 ///
 /// This is a convenience type which you most likely want to use instead of raw client.
 pub struct LndClient {
+    #[cfg(feature = "lightningrpc")]
     lightning: LightningClient,
     wallet: WalletKitClient,
 }
 
 impl LndClient {
     /// Returns the lightning client.
+    #[cfg(feature = "lightningrpc")]
     pub fn lightning(&mut self) -> &mut LightningClient {
         &mut self.lightning
     }
@@ -119,6 +123,7 @@ mod error;
 /// [`tonic::Status`] is re-exported as `Error` for convenience.
 pub type LndClientError = tonic::Status;
 
+#[cfg(feature = "lightningrpc")]
 pub mod lnrpc {
     tonic::include_proto!("lnrpc");
 }
@@ -181,6 +186,7 @@ pub async fn connect(
     let interceptor = MacaroonInterceptor { macaroon };
 
     let client = LndClient {
+        #[cfg(feature = "lightningrpc")]
         lightning: lnrpc::lightning_client::LightningClient::with_interceptor(
             channel.clone(),
             interceptor.clone(),

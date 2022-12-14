@@ -1,10 +1,11 @@
 // This example only fetches and prints the node info to the standard output similarly to
 // `lncli getinfo`.
 //
-// This program accepts three arguments: address, cert file, macaroon file
-// The address must start with `https://`!
+// The program accepts four arguments: host, port, cert file, macaroon file
+// Example run: `cargo run --features=lightningrpc --example getinfo <host> <port> <tls.cert> <file.macaroon>`
 
 #[tokio::main]
+#[cfg(feature = "lightningrpc")]
 async fn main() {
     let mut args = std::env::args_os();
     args.next().expect("not even zeroth arg given");
