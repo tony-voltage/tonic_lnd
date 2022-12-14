@@ -97,6 +97,12 @@ pub type WalletKitClient = walletrpc::wallet_kit_client::WalletKitClient<
     InterceptedService<SslChannel, MacaroonInterceptor>,
 >;
 
+/// Convenience type alias for router client.
+#[cfg(feature = "routerrpc")]
+pub type RouterClient = crate::routerrpc::router_client::RouterClient<
+    tonic::codegen::InterceptedService<SslChannel, MacaroonInterceptor>,
+>;
+
 /// The client returned by `connect` function
 ///
 /// This is a convenience type which you most likely want to use instead of raw client.
@@ -105,6 +111,8 @@ pub struct LndClient {
     lightning: LightningClient,
     #[cfg(feature = "walletrpc")]
     wallet: WalletKitClient,
+    #[cfg(feature = "routerrpc")]
+    router: RouterClient,
 }
 
 impl LndClient {
@@ -118,6 +126,12 @@ impl LndClient {
     #[cfg(feature = "walletrpc")]
     pub fn wallet(&mut self) -> &mut WalletKitClient {
         &mut self.wallet
+    }
+
+    /// Returns the router client.
+    #[cfg(feature = "routerrpc")]
+    pub fn router(&mut self) -> &mut RouterClient {
+        &mut self.router
     }
 }
 
@@ -139,6 +153,11 @@ pub mod walletrpc {
 #[cfg(feature = "signrpc")]
 pub mod signrpc {
     tonic::include_proto!("signrpc");
+}
+
+#[cfg(feature = "routerrpc")]
+pub mod routerrpc {
+    tonic::include_proto!("routerrpc");
 }
 
 /// Supplies requests with macaroon
@@ -200,6 +219,11 @@ pub async fn connect(
         ),
         #[cfg(feature = "walletrpc")]
         wallet: walletrpc::wallet_kit_client::WalletKitClient::with_interceptor(
+            channel.clone(),
+            interceptor.clone(),
+        ),
+        #[cfg(feature = "routerrpc")]
+        router: routerrpc::router_client::RouterClient::with_interceptor(
             channel.clone(),
             interceptor,
         ),
