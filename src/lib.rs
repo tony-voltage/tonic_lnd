@@ -92,6 +92,7 @@ pub type LightningClient =
     lnrpc::lightning_client::LightningClient<InterceptedService<SslChannel, MacaroonInterceptor>>;
 
 /// Convenience type alias for wallet client.
+#[cfg(feature = "walletrpc")]
 pub type WalletKitClient = walletrpc::wallet_kit_client::WalletKitClient<
     InterceptedService<SslChannel, MacaroonInterceptor>,
 >;
@@ -102,6 +103,7 @@ pub type WalletKitClient = walletrpc::wallet_kit_client::WalletKitClient<
 pub struct LndClient {
     #[cfg(feature = "lightningrpc")]
     lightning: LightningClient,
+    #[cfg(feature = "walletrpc")]
     wallet: WalletKitClient,
 }
 
@@ -113,6 +115,7 @@ impl LndClient {
     }
 
     /// Returns the wallet client.
+    #[cfg(feature = "walletrpc")]
     pub fn wallet(&mut self) -> &mut WalletKitClient {
         &mut self.wallet
     }
@@ -128,6 +131,7 @@ pub mod lnrpc {
     tonic::include_proto!("lnrpc");
 }
 
+#[cfg(feature = "walletrpc")]
 pub mod walletrpc {
     tonic::include_proto!("walletrpc");
 }
@@ -180,9 +184,11 @@ pub async fn connect(
 
     let pem = tokio::fs::read(lnd_tls_cert_path).await.ok();
     let uri = lnd_address.parse::<Uri>().unwrap();
+    #[allow(unused_variables)]
     let channel = SslChannel::new(pem, uri).await?;
 
     let macaroon = load_macaroon(lnd_macaroon_path).await.unwrap();
+    #[allow(unused_variables)]
     let interceptor = MacaroonInterceptor { macaroon };
 
     let client = LndClient {
@@ -191,6 +197,7 @@ pub async fn connect(
             channel.clone(),
             interceptor.clone(),
         ),
+        #[cfg(feature = "walletrpc")]
         wallet: walletrpc::wallet_kit_client::WalletKitClient::with_interceptor(
             channel.clone(),
             interceptor,

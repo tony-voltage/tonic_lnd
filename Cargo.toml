@@ -16,7 +16,8 @@ doctest = false
 
 [features]
 lightningrpc = []
-all = ["lightningrpc"]
+walletrpc = []
+all = ["lightningrpc", "walletrpc"]
 
 [dependencies]
 tonic = "0.7"
