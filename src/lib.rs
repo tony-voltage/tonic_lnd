@@ -75,6 +75,7 @@ use openssl::{
     ssl::{SslConnector, SslMethod},
     x509::X509,
 };
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::{error::Error, task::Poll};
 use tonic::body::BoxBody;
@@ -195,15 +196,13 @@ async fn load_macaroon(
 }
 
 pub async fn connect(
-    lnd_host: String,
-    lnd_port: u32,
+    lnd_address: SocketAddr,
     lnd_tls_cert_path: String,
     lnd_macaroon_path: String,
 ) -> Result<LndClient, Box<dyn std::error::Error>> {
-    let lnd_address = format!("https://{}:{}", lnd_host, lnd_port).to_string();
-
     let pem = tokio::fs::read(lnd_tls_cert_path).await.ok();
-    let uri = lnd_address.parse::<Uri>().unwrap();
+    let uri = format!("https://{}", lnd_address).parse::<Uri>()?;
+
     #[allow(unused_variables)]
     let channel = SslChannel::new(pem, uri).await?;
 

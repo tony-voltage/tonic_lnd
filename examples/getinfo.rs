@@ -1,26 +1,23 @@
 // This example only fetches and prints the node info to the standard output similarly to
 // `lncli getinfo`.
 //
-// The program accepts four arguments: host, port, cert file, macaroon file
-// Example run: `cargo run --features=lightningrpc --example getinfo <host> <port> <tls.cert> <file.macaroon>`
+// The program accepts three arguments: address, cert file, macaroon file
+// Example run: `cargo run --features=lightningrpc --example getinfo <address> <tls.cert> <file.macaroon>`
 
 #[tokio::main]
 #[cfg(feature = "lightningrpc")]
 async fn main() {
+    use std::net::SocketAddr;
+
     let mut args = std::env::args_os();
     args.next().expect("not even zeroth arg given");
-    let host = args
+    let address: SocketAddr = args
         .next()
-        .expect("missing arguments: host, port, cert file, macaroon file")
+        .expect("missing arguments: address, cert file, macaroon file")
         .into_string()
-        .expect("host is not UTF-8");
-    let port: u32 = args
-        .next()
-        .expect("missing arguments: port, cert file, macaroon file")
-        .into_string()
-        .expect("port is not UTF-8")
+        .expect("address is not UTF-8")
         .parse()
-        .expect("port is not u32");
+        .expect("address is not SocketAddr");
     let cert_file: String = args
         .next()
         .expect("missing arguments: cert file, macaroon file")
@@ -32,8 +29,8 @@ async fn main() {
         .into_string()
         .expect("macaroon_file is not UTF-8");
 
-    // Connecting to LND requires only host, port, cert file, macaroon file
-    let mut client = tonic_lnd::connect(host, port, cert_file, macaroon_file)
+    // Connecting to LND requires only address, cert file, macaroon file
+    let mut client = tonic_lnd::connect(address, cert_file, macaroon_file)
         .await
         .expect("failed to connect");
 

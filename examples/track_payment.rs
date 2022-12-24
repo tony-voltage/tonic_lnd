@@ -1,6 +1,6 @@
 // This example connects to LND and uses router rpc to track a payment.
 //
-// The program accepts five arguments: host, port, cert file, macaroon file, payment hash
+// The program accepts four arguments: address, cert file, macaroon file, payment hash
 // Example run: `cargo run --features=routerrpc --example track_payment <host> <port> <tls.cert> <file.macaroon> <payment_hash>`
 
 #[tokio::main]
@@ -8,18 +8,13 @@
 async fn main() {
     let mut args = std::env::args_os();
     args.next().expect("not even zeroth arg given");
-    let host = args
+    let address: SocketAddr = args
         .next()
-        .expect("missing arguments: host, port, cert file, macaroon file, payment hash")
+        .expect("missing arguments: address, cert file, macaroon file, payment hash")
         .into_string()
-        .expect("host is not UTF-8");
-    let port: u32 = args
-        .next()
-        .expect("missing arguments: port, cert file, macaroon file, payment hash")
-        .into_string()
-        .expect("port is not UTF-8")
+        .expect("address is not UTF-8")
         .parse()
-        .expect("port is not u32");
+        .expect("address is not SocketAddr");
     let cert_file: String = args
         .next()
         .expect("missing arguments: cert file, macaroon file, payment hash")

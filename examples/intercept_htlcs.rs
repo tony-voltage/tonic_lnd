@@ -1,25 +1,20 @@
 // This example connects to LND and uses router rpc to intercept htlcs, inspect the details, then resume forwarding them
 //
-// The program accepts four arguments: host, port, cert file, macaroon file
-// Example run: `cargo run --features=routerrpc --example intercept_htlcs <host> <port> <tls.cert> <file.macaroon>`
+// The program accepts three arguments: address, cert file, macaroon file
+// Example run: `cargo run --features=routerrpc --example intercept_htlcs <address> <tls.cert> <file.macaroon>`
 
 #[tokio::main]
 #[cfg(feature = "routerrpc")]
 async fn main() {
     let mut args = std::env::args_os();
     args.next().expect("not even zeroth arg given");
-    let host = args
+    let address: SocketAddr = args
         .next()
-        .expect("missing arguments: host, port, cert file, macaroon file")
+        .expect("missing arguments: address, cert file, macaroon file")
         .into_string()
-        .expect("host is not UTF-8");
-    let port: u32 = args
-        .next()
-        .expect("missing arguments: port, cert file, macaroon file")
-        .into_string()
-        .expect("port is not UTF-8")
+        .expect("address is not UTF-8")
         .parse()
-        .expect("port is not u32");
+        .expect("address is not SocketAddr");
     let cert_file: String = args
         .next()
         .expect("missing arguments: cert file, macaroon file")
@@ -32,7 +27,7 @@ async fn main() {
         .expect("macaroon_file is not UTF-8");
 
     // Connecting to LND requires only address, cert file, and macaroon file
-    let mut client = tonic_lnd::connect(host, port, cert_file, macaroon_file)
+    let mut client = tonic_lnd::connect(address, cert_file, macaroon_file)
         .await
         .expect("failed to connect");
 
