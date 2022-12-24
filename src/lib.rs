@@ -195,17 +195,14 @@ async fn load_macaroon(
 }
 
 pub async fn connect(
-    lnd_host: String,
-    lnd_port: u32,
     lnd_tls_cert_path: String,
     lnd_macaroon_path: String,
+    lnd_uri: Option<Uri>,
 ) -> Result<LndClient, Box<dyn std::error::Error>> {
-    let lnd_address = format!("https://{}:{}", lnd_host, lnd_port).to_string();
-
     let pem = tokio::fs::read(lnd_tls_cert_path).await.ok();
-    let uri = lnd_address.parse::<Uri>().unwrap();
+
     #[allow(unused_variables)]
-    let channel = SslChannel::new(pem, uri).await?;
+    let channel = SslChannel::new(pem, lnd_uri).await?;
 
     let macaroon = load_macaroon(lnd_macaroon_path).await.unwrap();
     #[allow(unused_variables)]
@@ -245,7 +242,7 @@ enum SslClient {
 }
 
 impl SslChannel {
-    pub async fn new(certificate: Option<Vec<u8>>, uri: Uri) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(certificate: Option<Vec<u8>>, uri: Option<Uri>) -> Result<Self, Box<dyn Error>> {
         let mut http = HttpConnector::new();
         http.enforce_http(false);
         let client = match certificate {
@@ -263,6 +260,9 @@ impl SslChannel {
                 SslClient::Tls(Client::builder().http2_only(true).build(https))
             }
         };
+
+        // use default uri if none is provided
+        let uri = uri.unwrap_or_else(|| "https://localhost:10000".parse().unwrap());
 
         Ok(Self { client, uri })
     }
