@@ -106,6 +106,7 @@ pub type RouterClient = crate::routerrpc::router_client::RouterClient<
 /// The client returned by `connect` function
 ///
 /// This is a convenience type which you most likely want to use instead of raw client.
+#[derive(Clone)]
 pub struct LndClient {
     #[cfg(feature = "lightningrpc")]
     lightning: LightningClient,
