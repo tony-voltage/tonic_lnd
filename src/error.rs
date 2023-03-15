@@ -13,19 +13,32 @@ pub struct ConnectError {
 
 impl From<InternalConnectError> for ConnectError {
     fn from(value: InternalConnectError) -> Self {
-        ConnectError {
-            internal: value,
-        }
+        ConnectError { internal: value }
     }
 }
 
 #[derive(Debug)]
 pub(crate) enum InternalConnectError {
-    ReadFile { file: PathBuf, error: std::io::Error, },
-    ParseCert { file: PathBuf, error: std::io::Error, },
-    InvalidAddress { address: String, error: Box<dyn std::error::Error + Send + Sync + 'static>, },
+    ReadFile {
+        file: PathBuf,
+        error: std::io::Error,
+    },
+    ParseCert {
+        file: PathBuf,
+        error: std::io::Error,
+    },
+    ParseCertNoFile {
+        error: std::io::Error,
+    },
+    InvalidAddress {
+        address: String,
+        error: Box<dyn std::error::Error + Send + Sync + 'static>,
+    },
     TlsConfig(tonic::transport::Error),
-    Connect { address: String, error: tonic::transport::Error, }
+    Connect {
+        address: String,
+        error: tonic::transport::Error,
+    },
 }
 
 impl fmt::Display for ConnectError {
@@ -35,6 +48,7 @@ impl fmt::Display for ConnectError {
         match &self.internal {
             ReadFile { file, .. } => write!(f, "failed to read file {}", file.display()),
             ParseCert { file, .. } => write!(f, "failed to parse certificate {}", file.display()),
+            ParseCertNoFile { .. } => write!(f, "failed to parse certificate"),
             InvalidAddress { address, .. } => write!(f, "invalid address {}", address),
             TlsConfig(_) => write!(f, "failed to configure TLS"),
             Connect { address, .. } => write!(f, "failed to connect to {}", address),
@@ -49,6 +63,7 @@ impl std::error::Error for ConnectError {
         match &self.internal {
             ReadFile { error, .. } => Some(error),
             ParseCert { error, .. } => Some(error),
+            ParseCertNoFile { error } => Some(error),
             InvalidAddress { error, .. } => Some(&**error),
             TlsConfig(error) => Some(error),
             Connect { error, .. } => Some(error),
