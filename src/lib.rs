@@ -194,6 +194,33 @@ pub async fn connect(
     Ok(client)
 }
 
+pub async fn connect_string(
+    lnd_host: String,
+    lnd_port: u32,
+    lnd_tls_cert_contents: Vec<u8>,
+    macaroon: String,
+) -> Result<LndClient, Box<dyn std::error::Error>> {
+    let lnd_address = format!("https://{}:{}", lnd_host, lnd_port).to_string();
+
+    let uri = lnd_address.parse::<Uri>().unwrap();
+    let channel = SslChannel::new(Some(lnd_tls_cert_contents), uri).await?;
+
+    let interceptor = MacaroonInterceptor { macaroon };
+
+    let client = LndClient {
+        lightning: lnrpc::lightning_client::LightningClient::with_interceptor(
+            channel.clone(),
+            interceptor.clone(),
+        ),
+        wallet: walletrpc::wallet_kit_client::WalletKitClient::with_interceptor(
+            channel.clone(),
+            interceptor,
+        ),
+    };
+
+    Ok(client)
+}
+
 #[derive(Clone)]
 pub struct SslChannel {
     uri: Uri,
