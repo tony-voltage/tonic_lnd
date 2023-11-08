@@ -76,6 +76,8 @@ use openssl::{
     x509::X509,
 };
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use std::time::Duration;
 use std::{error::Error, task::Poll};
 use tonic::body::BoxBody;
 use tonic::codegen::InterceptedService;
@@ -166,6 +168,7 @@ async fn load_macaroon(
 }
 
 pub async fn connect(
+    timeout: Option<Duration>,
     lnd_host: String,
     lnd_port: u32,
     lnd_tls_cert_path: String,
@@ -175,7 +178,7 @@ pub async fn connect(
 
     let pem = tokio::fs::read(lnd_tls_cert_path).await.ok();
     let uri = lnd_address.parse::<Uri>().unwrap();
-    let channel = SslChannel::new(pem, uri).await?;
+    let channel = SslChannel::new(pem, uri, timeout).await?;
 
     let macaroon = load_macaroon(lnd_macaroon_path).await.unwrap();
     let interceptor = MacaroonInterceptor { macaroon };
@@ -195,6 +198,7 @@ pub async fn connect(
 }
 
 pub async fn connect_string(
+    timeout: Option<Duration>,
     lnd_host: String,
     lnd_port: u32,
     lnd_tls_cert_contents: Vec<u8>,
@@ -203,7 +207,7 @@ pub async fn connect_string(
     let lnd_address = format!("https://{}:{}", lnd_host, lnd_port).to_string();
 
     let uri = lnd_address.parse::<Uri>().unwrap();
-    let channel = SslChannel::new(Some(lnd_tls_cert_contents), uri).await?;
+    let channel = SslChannel::new(Some(lnd_tls_cert_contents), uri, timeout).await?;
 
     let interceptor = MacaroonInterceptor { macaroon };
 
@@ -234,9 +238,16 @@ enum SslClient {
 }
 
 impl SslChannel {
-    pub async fn new(certificate: Option<Vec<u8>>, uri: Uri) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(
+        certificate: Option<Vec<u8>>,
+        uri: Uri,
+        timeout: Option<Duration>,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut http = HttpConnector::new();
+
+        http.set_connect_timeout(timeout);
         http.enforce_http(false);
+
         let client = match certificate {
             None => SslClient::ClearText(Client::builder().http2_only(true).build(http)),
             Some(pem) => {
