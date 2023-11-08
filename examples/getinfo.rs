@@ -34,7 +34,7 @@ async fn main() {
         .expect("macaroon_file is not UTF-8");
 
     // Connecting to LND requires only host, port, cert file, macaroon file
-    let mut client = tonic_lnd::connect(Some(Duration::new(20_u64, 0_u32)), host, port, cert_file, macaroon_file)
+    let mut client = tonic_lnd::connect(host, port, cert_file, macaroon_file, Some(Duration::new(20_u64, 0_u32)))
         .await
         .expect("failed to connect");
 

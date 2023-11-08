@@ -168,11 +168,11 @@ async fn load_macaroon(
 }
 
 pub async fn connect(
-    timeout: Option<Duration>,
     lnd_host: String,
     lnd_port: u32,
     lnd_tls_cert_path: String,
     lnd_macaroon_path: String,
+    timeout: Option<Duration>,
 ) -> Result<LndClient, Box<dyn std::error::Error>> {
     let lnd_address = format!("https://{}:{}", lnd_host, lnd_port).to_string();
 
@@ -198,11 +198,11 @@ pub async fn connect(
 }
 
 pub async fn connect_string(
-    timeout: Option<Duration>,
     lnd_host: String,
     lnd_port: u32,
     lnd_tls_cert_contents: Vec<u8>,
     macaroon: String,
+    timeout: Option<Duration>,
 ) -> Result<LndClient, Box<dyn std::error::Error>> {
     let lnd_address = format!("https://{}:{}", lnd_host, lnd_port).to_string();
 
